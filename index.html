@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rostin Maafi - Developer Portfolio</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #001a2c;
+            --text-color: #e0e0e0;
+            --accent-color: #ffd700;
+            --secondary-bg: #002b47;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow-x: hidden;
+            cursor: none;
+        }
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        header {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            padding-left: 10%;
+        }
+        h1 {
+            font-size: 4rem;
+            margin: 0;
+            line-height: 1.2;
+        }
+        .highlight {
+            color: var(--accent-color);
+        }
+        .subtitle {
+            font-size: 1.5rem;
+            margin-top: 1rem;
+        }
+        .cta-button {
+            background-color: var(--accent-color);
+            color: var(--bg-color);
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: none;
+            margin-top: 2rem;
+            transition: transform 0.3s ease;
+        }
+        .cta-button:hover {
+            transform: scale(1.05);
+        }
+        .section {
+            padding: 4rem 0;
+        }
+        h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: var(--accent-color);
+        }
+        .skills-grid, .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+        .skill-item, .project-card {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .skill-item:hover, .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        .project-image {
+            width: 100%;
+            height: 200px;
+            background-color: #004a7c;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem;
+            color: var(--accent-color);
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+        .project-title {
+            font-size: 1.25rem;
+            margin: 0 0 0.5rem 0;
+        }
+        .project-description {
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        .project-link {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+        .project-link:hover {
+            text-decoration: underline;
+        }
+        #cursor {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--accent-color);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        #cursor-blur {
+            width: 400px;
+            height: 400px;
+            background-color: rgba(255, 215, 0, 0.1);
+            border-radius: 50%;
+            position: fixed;
+            filter: blur(100px);
+            pointer-events: none;
+            z-index: 9998;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    <div id="cursor"></div>
+    <div id="cursor-blur"></div>
+    
+    <header>
+        <h1>Hi, I'm <span class="highlight">Rostin Maafi</span></h1>
+        <p class="subtitle">Computer Science Student & Aspiring Developer</p>
+        <button class="cta-button">Explore My Work</button>
+    </header>
+
+    <div class="container">
+        <section class="section" id="about">
+            <h2>About Me</h2>
+            <p>I'm a passionate computer science student at Queen's University, constantly exploring new technologies and pushing the boundaries of what's possible in the digital realm. With a keen interest in AI, machine learning, and web development, I'm always eager to take on new challenges and create innovative solutions.</p>
+        </section>
+
+        <section class="section" id="skills">
+            <h2>Skills</h2>
+            <div class="skills-grid">
+                <div class="skill-item">Python</div>
+                <div class="skill-item">Java</div>
+                <div class="skill-item">C++</div>
+                <div class="skill-item">JavaScript</div>
+                <div class="skill-item">React</div>
+                <div class="skill-item">Node.js</div>
+                <div class="skill-item">SQL</div>
+                <div class="skill-item">Git</div>
+            </div>
+        </section>
+
+        <section class="section" id="projects">
+            <h2>Projects</h2>
+            <div class="projects-grid">
+                <div class="project-card">
+                    <div class="project-image">AI</div>
+                    <h3 class="project-title">AI Chatbot</h3>
+                    <p class="project-description">An intelligent chatbot powered by machine learning algorithms.</p>
+                    <a href="#" class="project-link">Learn More</a>
+                </div>
+                <div class="project-card">
+                    <div class="project-image">WEB</div>
+                    <h3 class="project-title">E-commerce Platform</h3>
+                    <p class="project-description">A full-stack web application for online shopping experiences.</p>
+                    <a href="#" class="project-link">Learn More</a>
+                </div>
+                <div class="project-card">
+                    <div class="project-image">APP</div>
+                    <h3 class="project-title">Mobile Fitness Tracker</h3>
+                    <p class="project-description">An iOS app for tracking workouts and health metrics.</p>
+                    <a href="#" class="project-link">Learn More</a>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Three.js setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        // Particles
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCnt = 5000;
+        const posArray = new Float32Array(particlesCnt * 3);
+        for (let i = 0; i < particlesCnt * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 5;
+        }
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.005,
+            color: 0xffffff,
+        });
+        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particlesMesh);
+
+        // 3D Logo
+        const loader = new THREE.FontLoader();
+        loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function(font) {
+            const textGeometry = new THREE.TextGeometry('RM', {
+                font: font,
+                size: 0.5,
+                height: 0.1,
+                curveSegments: 12,
+                bevelEnabled: true,
+                bevelThickness: 0.03,
+                bevelSize: 0.02,
+                bevelOffset: 0,
+                bevelSegments: 5
+            });
+            const textMaterial = new THREE.MeshPhongMaterial({ color: 0xffd700 });
+            const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+            textMesh.position.set(-0.5, 0, -2);
+            scene.add(textMesh);
+
+            // Add lighting for the 3D text
+            const light = new THREE.PointLight(0xffffff, 1, 100);
+            light.position.set(0, 0, 10);
+            scene.add(light);
+        });
+
+        camera.position.z = 2;
+
+        // Animation
+        function animate() {
+            requestAnimationFrame(animate);
+            particlesMesh.rotation.x += 0.0005;
+            particlesMesh.rotation.y += 0.0005;
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Responsive canvas
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Custom cursor
+        const cursor = document.getElementById('cursor');
+        const cursorBlur = document.getElementById('cursor-blur');
+
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+            cursorBlur.style.left = e.clientX - 200 + 'px';
+            cursorBlur.style.top = e.clientY - 200 + 'px';
+        });
+
+        // Parallax effect
+        document.addEventListener('mousemove', (e) => {
+            const mouseX = e.clientX / window.innerWidth - 0.5;
+            const mouseY = e.clientY / window.innerHeight - 0.5;
+            gsap.to(scene.rotation, {
+                y: mouseX * 0.3,
+                x: -mouseY * 0.3,
+                duration: 1
+            });
+        });
+    </script>
+</body>
+</html>
