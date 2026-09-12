@@ -1,1476 +1,563 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Rostin Maafi — Portfolio</title>
-    <link
-      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <style>
-      *,
-      *::before,
-      *::after {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      :root {
-        --bg: #050505;
-        --bg2: #0a0a0a;
-        --fg: #e8e8e8;
-        --muted: #555;
-        --accent: #00ffc8;
-        --accent2: #7b61ff;
-        --accent3: #ff3e8e;
-        --border: rgba(255, 255, 255, 0.06);
-        --glow: 0 0 30px rgba(0, 255, 200, 0.15);
-        --mono: "JetBrains Mono", monospace;
-        --display: "Syne", sans-serif;
-      }
-
-      html {
-        scroll-behavior: smooth;
-      }
-
-      body {
-        font-family: var(--mono);
-        background: var(--bg);
-        color: var(--fg);
-        overflow-x: hidden;
-        cursor: none;
-        -webkit-font-smoothing: antialiased;
-      }
-
-      ::selection {
-        background: var(--accent);
-        color: var(--bg);
-      }
-
-      /* ═══ Canvas ═══ */
-      #particle-canvas {
-        position: fixed;
-        inset: 0;
-        z-index: 0;
-        pointer-events: none;
-      }
-
-      /* ═══ Grid BG ═══ */
-      .grid-bg {
-        position: fixed;
-        inset: 0;
-        z-index: 0;
-        pointer-events: none;
-        background-image: linear-gradient(
-            rgba(255, 255, 255, 0.02) 1px,
-            transparent 1px
-          ),
-          linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-        background-size: 60px 60px;
-        mask-image: radial-gradient(
-          ellipse 70% 60% at 50% 40%,
-          black 30%,
-          transparent 100%
-        );
-        -webkit-mask-image: radial-gradient(
-          ellipse 70% 60% at 50% 40%,
-          black 30%,
-          transparent 100%
-        );
-      }
-
-      /* ═══ Cursor ═══ */
-      #cursor-dot {
-        width: 8px;
-        height: 8px;
-        background: var(--accent);
-        border-radius: 50%;
-        position: fixed;
-        pointer-events: none;
-        z-index: 10001;
-        transform: translate(-50%, -50%);
-        transition: transform 0.1s ease, width 0.3s, height 0.3s,
-          background 0.3s;
-        box-shadow: 0 0 12px var(--accent);
-      }
-
-      #cursor-ring {
-        width: 40px;
-        height: 40px;
-        border: 1.5px solid rgba(0, 255, 200, 0.4);
-        border-radius: 50%;
-        position: fixed;
-        pointer-events: none;
-        z-index: 10000;
-        transform: translate(-50%, -50%);
-        transition: width 0.4s cubic-bezier(0.23, 1, 0.32, 1),
-          height 0.4s cubic-bezier(0.23, 1, 0.32, 1), border-color 0.3s;
-      }
-
-      body:has(a:hover) #cursor-ring,
-      body:has(button:hover) #cursor-ring,
-      body:has(.project-item:hover) #cursor-ring {
-        width: 60px;
-        height: 60px;
-        border-color: var(--accent);
-      }
-
-      body:has(a:hover) #cursor-dot,
-      body:has(button:hover) #cursor-dot {
-        transform: translate(-50%, -50%) scale(2);
-      }
-
-      /* ═══ Navigation ═══ */
-      nav {
-        position: fixed;
-        top: 0;
-        width: 100%;
-        z-index: 1000;
-        padding: 1.25rem 3rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        backdrop-filter: blur(20px);
-        background: rgba(5, 5, 5, 0.6);
-        border-bottom: 1px solid var(--border);
-        transition: transform 0.4s ease;
-      }
-
-      nav.hidden {
-        transform: translateY(-100%);
-      }
-
-      .nav-logo {
-        font-family: var(--display);
-        font-weight: 800;
-        font-size: 1.1rem;
-        color: var(--fg);
-        text-decoration: none;
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-      }
-
-      .nav-logo .logo-bracket {
-        color: var(--accent);
-        font-family: var(--mono);
-        font-weight: 400;
-      }
-
-      .nav-links {
-        display: flex;
-        gap: 2rem;
-        list-style: none;
-        align-items: center;
-      }
-
-      .nav-links a {
-        color: var(--muted);
-        text-decoration: none;
-        font-size: 0.75rem;
-        font-weight: 400;
-        letter-spacing: 0.08em;
-        transition: color 0.3s;
-        position: relative;
-      }
-
-      .nav-links a:hover {
-        color: var(--accent);
-      }
-
-      .nav-links a::before {
-        content: "//";
-        margin-right: 0.3rem;
-        color: var(--accent);
-        opacity: 0;
-        transition: opacity 0.3s;
-      }
-
-      .nav-links a:hover::before {
-        opacity: 1;
-      }
-
-      .status-dot {
-        width: 6px;
-        height: 6px;
-        background: var(--accent);
-        border-radius: 50%;
-        animation: pulse-dot 2s ease-in-out infinite;
-        box-shadow: 0 0 8px var(--accent);
-      }
-
-      @keyframes pulse-dot {
-        0%,
-        100% {
-          opacity: 1;
-        }
-        50% {
-          opacity: 0.3;
-        }
-      }
-
-      /* ═══ Hero ═══ */
-      .hero {
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        padding: 0 8vw;
-        position: relative;
-        z-index: 1;
-      }
-
-      .hero-prefix {
-        font-size: 0.7rem;
-        color: var(--accent);
-        letter-spacing: 0.15em;
-        margin-bottom: 1.5rem;
-        opacity: 0;
-        animation: fadeUp 0.8s ease 0.3s forwards;
-      }
-
-      .hero-prefix .blink {
-        animation: blink-cursor 1s step-end infinite;
-      }
-
-      @keyframes blink-cursor {
-        0%,
-        100% {
-          opacity: 1;
-        }
-        50% {
-          opacity: 0;
-        }
-      }
-
-      .hero-name {
-        font-family: var(--display);
-        font-size: clamp(4rem, 11vw, 10rem);
-        font-weight: 800;
-        line-height: 0.9;
-        letter-spacing: -0.03em;
-        position: relative;
-        opacity: 0;
-        animation: fadeUp 1s ease 0.5s forwards;
-      }
-
-      .hero-name .line-2 {
-        display: block;
-        -webkit-text-stroke: 1.5px var(--fg);
-        color: transparent;
-        position: relative;
-      }
-
-      /* Glitch effect */
-      .glitch {
-        position: relative;
-      }
-
-      .glitch::before,
-      .glitch::after {
-        content: attr(data-text);
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-      }
-
-      .glitch::before {
-        color: var(--accent3);
-        animation: glitch-1 3s infinite linear alternate-reverse;
-        clip-path: inset(0 0 80% 0);
-      }
-
-      .glitch::after {
-        color: var(--accent2);
-        animation: glitch-2 3s infinite linear alternate-reverse;
-        clip-path: inset(80% 0 0 0);
-      }
-
-      @keyframes glitch-1 {
-        0%,
-        92% {
-          transform: translate(0);
-        }
-        93% {
-          transform: translate(-4px, 2px);
-        }
-        94% {
-          transform: translate(4px, -2px);
-        }
-        95% {
-          transform: translate(-2px, -1px);
-        }
-        96%,
-        100% {
-          transform: translate(0);
-        }
-      }
-
-      @keyframes glitch-2 {
-        0%,
-        90% {
-          transform: translate(0);
-        }
-        91% {
-          transform: translate(3px, -1px);
-        }
-        92% {
-          transform: translate(-3px, 1px);
-        }
-        93% {
-          transform: translate(2px, 2px);
-        }
-        94%,
-        100% {
-          transform: translate(0);
-        }
-      }
-
-      .hero-tagline {
-        margin-top: 2.5rem;
-        font-size: 0.85rem;
-        color: var(--muted);
-        font-weight: 300;
-        line-height: 1.8;
-        max-width: 500px;
-        opacity: 0;
-        animation: fadeUp 0.8s ease 0.9s forwards;
-      }
-
-      .hero-tagline .typed-text {
-        color: var(--accent);
-      }
-      .hero-tagline .cursor-char {
-        display: inline-block;
-        width: 2px;
-        height: 1em;
-        background: var(--accent);
-        margin-left: 2px;
-        vertical-align: middle;
-        animation: blink-cursor 0.8s step-end infinite;
-      }
-
-      .hero-cta-row {
-        display: flex;
-        gap: 1.5rem;
-        margin-top: 3rem;
-        opacity: 0;
-        animation: fadeUp 0.8s ease 1.2s forwards;
-      }
-
-      .cta-primary {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.6rem;
-        padding: 0.85rem 1.8rem;
-        background: var(--accent);
-        color: var(--bg);
-        font-family: var(--mono);
-        font-size: 0.8rem;
-        font-weight: 500;
-        text-decoration: none;
-        border: none;
-        border-radius: 0;
-        cursor: none;
-        position: relative;
-        overflow: hidden;
-        transition: transform 0.3s ease;
-      }
-
-      .cta-primary:hover {
-        transform: translateY(-2px);
-      }
-
-      .cta-primary::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(
-          90deg,
-          transparent,
-          rgba(255, 255, 255, 0.2),
-          transparent
-        );
-        transform: translateX(-100%);
-        transition: transform 0.6s ease;
-      }
-
-      .cta-primary:hover::after {
-        transform: translateX(100%);
-      }
-
-      .cta-secondary {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.6rem;
-        padding: 0.85rem 1.8rem;
-        background: transparent;
-        color: var(--fg);
-        font-family: var(--mono);
-        font-size: 0.8rem;
-        font-weight: 400;
-        text-decoration: none;
-        border: 1px solid var(--border);
-        cursor: none;
-        transition: border-color 0.3s, color 0.3s;
-      }
-
-      .cta-secondary:hover {
-        border-color: var(--accent);
-        color: var(--accent);
-      }
-
-      .hero-scroll-indicator {
-        position: absolute;
-        bottom: 2.5rem;
-        left: 50%;
-        transform: translateX(-50%);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.5rem;
-        opacity: 0;
-        animation: fadeUp 0.8s ease 1.6s forwards;
-      }
-
-      .scroll-line {
-        width: 1px;
-        height: 40px;
-        position: relative;
-        overflow: hidden;
-        background: var(--border);
-      }
-
-      .scroll-line::after {
-        content: "";
-        position: absolute;
-        top: -100%;
-        width: 100%;
-        height: 100%;
-        background: var(--accent);
-        animation: scroll-down 2s ease-in-out infinite;
-      }
-
-      @keyframes scroll-down {
-        0% {
-          top: -100%;
-        }
-        50% {
-          top: 100%;
-        }
-        100% {
-          top: 100%;
-        }
-      }
-
-      @keyframes fadeUp {
-        from {
-          opacity: 0;
-          transform: translateY(30px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      /* ═══ Sections ═══ */
-      section {
-        padding: 7rem 8vw;
-        position: relative;
-        z-index: 1;
-      }
-
-      .section-header {
-        display: flex;
-        align-items: baseline;
-        gap: 1.5rem;
-        margin-bottom: 4rem;
-      }
-
-      .section-num {
-        font-size: 0.7rem;
-        color: var(--accent);
-        letter-spacing: 0.1em;
-        white-space: nowrap;
-      }
-
-      .section-title {
-        font-family: var(--display);
-        font-size: clamp(2rem, 5vw, 3.5rem);
-        font-weight: 700;
-        letter-spacing: -0.02em;
-        line-height: 1.1;
-      }
-
-      .section-line {
-        flex: 1;
-        height: 1px;
-        background: var(--border);
-      }
-
-      /* ═══ About ═══ */
-      .about-layout {
-        display: grid;
-        grid-template-columns: 1.2fr 1fr;
-        gap: 5rem;
-      }
-
-      .about-text {
-        font-size: 0.95rem;
-        line-height: 2;
-        color: var(--muted);
-        font-weight: 300;
-      }
-
-      .about-text strong {
-        color: var(--fg);
-        font-weight: 500;
-      }
-      .about-text .hl {
-        color: var(--accent);
-      }
-
-      .terminal-card {
-        background: var(--bg2);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        overflow: hidden;
-        font-size: 0.8rem;
-      }
-
-      .terminal-bar {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.75rem 1rem;
-        background: rgba(255, 255, 255, 0.03);
-        border-bottom: 1px solid var(--border);
-      }
-
-      .terminal-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-      }
-
-      .terminal-dot.r {
-        background: #ff5f57;
-      }
-      .terminal-dot.y {
-        background: #febc2e;
-      }
-      .terminal-dot.g {
-        background: #28c840;
-      }
-
-      .terminal-title {
-        margin-left: 0.75rem;
-        color: var(--muted);
-        font-size: 0.7rem;
-      }
-
-      .terminal-body {
-        padding: 1.25rem;
-        line-height: 2;
-      }
-
-      .terminal-body .prompt {
-        color: var(--accent);
-      }
-      .terminal-body .cmd {
-        color: var(--fg);
-      }
-      .terminal-body .output {
-        color: var(--muted);
-      }
-      .terminal-body .string {
-        color: #ffd866;
-      }
-      .terminal-body .keyword {
-        color: var(--accent2);
-      }
-
-      /* ═══ Skills ═══ */
-      .skills-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 1px;
-        background: var(--border);
-        border: 1px solid var(--border);
-      }
-
-      .skill-card {
-        background: var(--bg);
-        padding: 2rem 1.5rem;
-        position: relative;
-        overflow: hidden;
-        transition: background 0.4s ease;
-      }
-
-      .skill-card::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 2px;
-        background: linear-gradient(90deg, var(--accent), var(--accent2));
-        transform: scaleX(0);
-        transform-origin: left;
-        transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-      }
-
-      .skill-card:hover {
-        background: rgba(0, 255, 200, 0.03);
-      }
-      .skill-card:hover::before {
-        transform: scaleX(1);
-      }
-
-      .skill-icon {
-        font-size: 1.5rem;
-        margin-bottom: 1rem;
-        display: block;
-      }
-
-      .skill-name {
-        font-family: var(--display);
-        font-size: 1.1rem;
-        font-weight: 600;
-        margin-bottom: 0.3rem;
-      }
-
-      .skill-meta {
-        font-size: 0.65rem;
-        color: var(--muted);
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-      }
-
-      .skill-bar {
-        margin-top: 1rem;
-        height: 2px;
-        background: var(--border);
-        border-radius: 1px;
-        overflow: hidden;
-      }
-
-      .skill-bar-fill {
-        height: 100%;
-        background: linear-gradient(90deg, var(--accent), var(--accent2));
-        width: 0%;
-        transition: width 1.5s cubic-bezier(0.23, 1, 0.32, 1);
-        border-radius: 1px;
-      }
-
-      .skill-card.visible .skill-bar-fill {
-        width: var(--level);
-      }
-
-      /* ═══ Projects ═══ */
-      .projects-stack {
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-      }
-
-      .project-item {
-        display: grid;
-        grid-template-columns: 5rem 1fr auto;
-        align-items: center;
-        gap: 2rem;
-        padding: 2rem;
-        background: var(--bg2);
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        text-decoration: none;
-        color: var(--fg);
-        position: relative;
-        overflow: hidden;
-        transition: border-color 0.4s ease, transform 0.3s ease;
-        cursor: none;
-      }
-
-      .project-item::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(
-          135deg,
-          rgba(0, 255, 200, 0.03),
-          rgba(123, 97, 255, 0.03)
-        );
-        opacity: 0;
-        transition: opacity 0.4s ease;
-      }
-
-      .project-item:hover {
-        border-color: rgba(0, 255, 200, 0.3);
-        transform: translateX(6px);
-      }
-      .project-item:hover::before {
-        opacity: 1;
-      }
-
-      .project-icon-box {
-        width: 5rem;
-        height: 5rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        position: relative;
-        z-index: 1;
-        background: var(--bg);
-        transition: border-color 0.4s ease, box-shadow 0.4s ease;
-      }
-
-      .project-item:hover .project-icon-box {
-        border-color: var(--accent);
-        box-shadow: var(--glow);
-      }
-
-      .project-info {
-        position: relative;
-        z-index: 1;
-      }
-
-      .project-name {
-        font-family: var(--display);
-        font-size: 1.3rem;
-        font-weight: 700;
-        margin-bottom: 0.4rem;
-      }
-
-      .project-desc {
-        font-size: 0.8rem;
-        color: var(--muted);
-        font-weight: 300;
-        line-height: 1.6;
-        max-width: 460px;
-      }
-
-      .project-tags {
-        display: flex;
-        gap: 0.5rem;
-        margin-top: 0.75rem;
-      }
-
-      .tag {
-        font-size: 0.6rem;
-        letter-spacing: 0.08em;
-        padding: 0.25rem 0.65rem;
-        border: 1px solid var(--border);
-        border-radius: 2px;
-        color: var(--accent);
-        text-transform: uppercase;
-      }
-
-      .project-arrow {
-        font-size: 1.2rem;
-        color: var(--muted);
-        transition: color 0.3s, transform 0.3s;
-        position: relative;
-        z-index: 1;
-      }
-
-      .project-item:hover .project-arrow {
-        color: var(--accent);
-        transform: translateX(6px);
-      }
-
-      /* ═══ Contact ═══ */
-      .contact-section {
-        text-align: center;
-        padding: 10rem 8vw;
-      }
-
-      .contact-big {
-        font-family: var(--display);
-        font-size: clamp(2.5rem, 6vw, 5rem);
-        font-weight: 800;
-        line-height: 1.1;
-        letter-spacing: -0.03em;
-        margin-bottom: 1.5rem;
-      }
-
-      .contact-big .accent-text {
-        background: linear-gradient(135deg, var(--accent), var(--accent2));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-      }
-
-      .contact-sub {
-        font-size: 0.85rem;
-        color: var(--muted);
-        font-weight: 300;
-        max-width: 400px;
-        margin: 0 auto 3rem;
-        line-height: 1.8;
-      }
-
-      .contact-grid {
-        display: flex;
-        justify-content: center;
-        gap: 1rem;
-      }
-
-      .contact-btn {
-        padding: 0.75rem 1.5rem;
-        font-family: var(--mono);
-        font-size: 0.75rem;
-        text-decoration: none;
-        border: 1px solid var(--border);
-        color: var(--fg);
-        transition: all 0.3s ease;
-        cursor: none;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-      }
-
-      .contact-btn:hover {
-        border-color: var(--accent);
-        color: var(--accent);
-        box-shadow: var(--glow);
-        transform: translateY(-2px);
-      }
-
-      .contact-btn .arrow {
-        transition: transform 0.3s;
-      }
-      .contact-btn:hover .arrow {
-        transform: translateX(4px);
-      }
-
-      /* ═══ Footer ═══ */
-      footer {
-        padding: 2rem 8vw;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-top: 1px solid var(--border);
-        font-size: 0.7rem;
-        color: var(--muted);
-      }
-
-      footer a {
-        color: var(--accent);
-        text-decoration: none;
-        cursor: none;
-      }
-
-      /* ═══ Scroll Reveal ═══ */
-      .sr {
-        opacity: 0;
-        transform: translateY(40px);
-        transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
-      }
-      .sr.visible {
-        opacity: 1;
-        transform: translateY(0);
-      }
-      .sr-d1 {
-        transition-delay: 0.1s;
-      }
-      .sr-d2 {
-        transition-delay: 0.2s;
-      }
-      .sr-d3 {
-        transition-delay: 0.3s;
-      }
-      .sr-d4 {
-        transition-delay: 0.4s;
-      }
-      .sr-d5 {
-        transition-delay: 0.5s;
-      }
-      .sr-d6 {
-        transition-delay: 0.6s;
-      }
-      .sr-d7 {
-        transition-delay: 0.7s;
-      }
-      .sr-d8 {
-        transition-delay: 0.8s;
-      }
-
-      /* ═══ Responsive ═══ */
-      @media (max-width: 900px) {
-        nav {
-          padding: 1rem 1.5rem;
-        }
-        section {
-          padding: 5rem 6vw;
-        }
-        .hero {
-          padding: 0 6vw;
-        }
-        .about-layout {
-          grid-template-columns: 1fr;
-          gap: 2.5rem;
-        }
-        .skills-grid {
-          grid-template-columns: repeat(2, 1fr);
-        }
-        .project-item {
-          grid-template-columns: 1fr;
-          gap: 1rem;
-        }
-        .project-icon-box {
-          display: none;
-        }
-        .project-arrow {
-          display: none;
-        }
-        .contact-grid {
-          flex-direction: column;
-          align-items: center;
-        }
-        footer {
-          flex-direction: column;
-          gap: 0.75rem;
-          text-align: center;
-        }
-      }
-
-      @media (max-width: 560px) {
-        .skills-grid {
-          grid-template-columns: 1fr;
-        }
-        .nav-links {
-          gap: 1rem;
-        }
-        .hero-cta-row {
-          flex-direction: column;
-        }
-      }
-
-      @media (pointer: coarse) {
-        body {
-          cursor: auto;
-        }
-        #cursor-dot,
-        #cursor-ring {
-          display: none;
-        }
-        .cta-primary,
-        .cta-secondary,
-        .contact-btn,
-        .project-item {
-          cursor: pointer;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <canvas id="particle-canvas"></canvas>
-    <div class="grid-bg"></div>
-    <div id="cursor-dot"></div>
-    <div id="cursor-ring"></div>
-
-    <!-- Nav -->
-    <nav>
-      <a href="#" class="nav-logo">
-        <span class="logo-bracket">&lt;</span>RM<span class="logo-bracket"
-          >/&gt;</span
-        >
-      </a>
-      <ul class="nav-links">
-        <li><a href="#about">about</a></li>
-        <li><a href="#skills">skills</a></li>
-        <li><a href="#projects">projects</a></li>
-        <li><a href="#contact">contact</a></li>
-        <li><div class="status-dot" title="Available for work"></div></li>
-      </ul>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rostin Maafi — Software Engineer</title>
+  <meta name="description" content="Rostin Maafi is a Computer Science graduate from Queen's University building software across the stack — from ROS 2 robots to Next.js products. Open to software engineering roles.">
+  <meta name="theme-color" content="#07070a">
+  <meta property="og:title" content="Rostin Maafi — Software Engineer">
+  <meta property="og:description" content="Queen's University CS grad. Robotics, AI and full-stack software. Open to work.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://maafi.ca">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0b10'/%3E%3Ctext x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial,Helvetica,sans-serif' font-weight='800' font-size='38' fill='%23ffc247'%3ER%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="loading">
+
+  <!-- ===== PRELOADER ===== -->
+  <div class="preloader" id="preloader" aria-hidden="true">
+    <div class="preloader__name">
+      <span style="--i:0">R</span><span style="--i:1">O</span><span style="--i:2">S</span><span style="--i:3">T</span><span style="--i:4">I</span><span style="--i:5">N</span>
+    </div>
+    <div class="preloader__count" id="preCount">000</div>
+    <div class="preloader__bar" id="preBar"></div>
+  </div>
+
+  <!-- ===== CUSTOM CURSOR ===== -->
+  <div class="cursor-dot" id="cursorDot" aria-hidden="true"><div></div></div>
+  <div class="cursor-ring" id="cursorRing" aria-hidden="true"><div></div></div>
+
+  <!-- ===== SCROLL PROGRESS ===== -->
+  <div class="progress" id="progress" aria-hidden="true"></div>
+
+  <a class="skip" href="#main">Skip to content</a>
+
+  <!-- ===== NAV ===== -->
+  <header class="nav" id="nav">
+    <div class="nav__inner">
+      <a class="nav__logo" href="#top" aria-label="Back to top">RM<em>.</em></a>
+      <nav aria-label="Primary">
+        <ul class="nav__links">
+          <li><a href="#about" data-num="01">About</a></li>
+          <li><a href="#experience" data-num="02">Experience</a></li>
+          <li><a href="#projects" data-num="03">Projects</a></li>
+          <li><a href="#skills" data-num="04">Skills</a></li>
+          <li><a href="#contact" data-num="05">Contact</a></li>
+        </ul>
+      </nav>
+      <div class="nav__right">
+        <button class="nav__burger" id="burger" aria-label="Open menu" aria-expanded="false" aria-controls="menu"><span></span><span></span></button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== MOBILE MENU ===== -->
+  <div class="menu" id="menu" aria-hidden="true">
+    <nav class="menu__links" aria-label="Mobile">
+      <a href="#about" style="--i:0"><span>01</span>About</a>
+      <a href="#experience" style="--i:1"><span>02</span>Experience</a>
+      <a href="#projects" style="--i:2"><span>03</span>Projects</a>
+      <a href="#skills" style="--i:3"><span>04</span>Skills</a>
+      <a href="#contact" style="--i:4"><span>05</span>Contact</a>
     </nav>
+    <div class="menu__foot">
+      <a href="mailto:rostin@maafi.ca">rostin@maafi.ca</a>
+      <a data-nolink>GitHub</a>
+      <a href="https://www.linkedin.com/in/rostin-maafi/" target="_blank" rel="noopener">LinkedIn</a>
+    </div>
+  </div>
 
-    <!-- Hero -->
-    <section class="hero">
-      <p class="hero-prefix">$ whoami <span class="blink">_</span></p>
-      <h1 class="hero-name">
-        <span class="glitch" data-text="Rostin">Rostin</span>
-        <span class="line-2">Maafi</span>
-      </h1>
-      <p class="hero-tagline">
-        CS @ Queen's University — building at the intersection of<br />
-        <span class="typed-text" id="typed-target"></span
-        ><span class="cursor-char"></span>
-      </p>
-      <div class="hero-cta-row">
-        <a href="#projects" class="cta-primary">View Projects →</a>
-        <a href="#contact" class="cta-secondary">&lt; Get In Touch /&gt;</a>
-      </div>
-      <div class="hero-scroll-indicator">
-        <div class="scroll-line"></div>
-      </div>
-    </section>
+  <main id="main">
 
-    <!-- About -->
-    <section id="about">
-      <div class="section-header sr">
-        <span class="section-num">01 // ABOUT</span>
-        <div class="section-line"></div>
-      </div>
-      <div class="about-layout">
-        <div class="about-text sr sr-d1">
-          <p>
-            I'm a
-            <strong>computer science graduate from Queen's University</strong> who
-            lives in the space between
-            <span class="hl">algorithms and aesthetics</span>.
+    <!-- ===== HERO ===== -->
+    <section class="hero" id="top">
+      <canvas class="hero__canvas" id="heroCanvas" aria-hidden="true"></canvas>
+      <div class="hero__blob hero__blob--1" aria-hidden="true"></div>
+      <div class="hero__blob hero__blob--2" aria-hidden="true"></div>
+
+      <div class="container hero__inner">
+        <div class="hero__content">
+          <p class="hero__eyebrow">// Queen's University · Computer Science</p>
+          <h1 class="hero__title">
+            <span class="line" data-split>Rostin</span>
+            <span class="line line--outline" data-split data-offset="6">Maafi</span>
+          </h1>
+          <div class="hero__role" aria-live="polite">
+            <span class="hero__role-arrow">→</span>
+            <span id="typed"></span><span class="caret" aria-hidden="true"></span>
+          </div>
+          <p class="hero__desc">
+            I build software that thinks, moves and ships — from a quadruped robot patrolling on
+            <strong>ROS 2</strong>, to a production backgammon game, to an AI front desk for local
+            businesses on <strong>Next.js</strong>. Currently looking for my next software engineering role.
           </p>
-          <br />
-          <p>
-            My focus areas span <strong>artificial intelligence</strong>,
-            <strong>machine learning</strong>, and
-            <strong>full-stack development</strong>. I don't just write code — I
-            architect systems that are clean, scalable, and purposeful.
-          </p>
-          <br />
-          <p>
-            When I'm not pushing commits, I'm exploring new frameworks,
-            contributing to open source, and thinking about how technology can
-            solve <span class="hl">real-world problems</span>.
-          </p>
-        </div>
-        <div class="terminal-card sr sr-d2">
-          <div class="terminal-bar">
-            <div class="terminal-dot r"></div>
-            <div class="terminal-dot y"></div>
-            <div class="terminal-dot g"></div>
-            <span class="terminal-title">rostin@dev ~ %</span>
+          <div class="hero__cta">
+            <a class="btn btn--primary" href="#projects" data-magnetic>
+              See my work
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg>
+            </a>
+            <a class="btn btn--ghost" href="#contact" data-magnetic>Get in touch</a>
           </div>
-          <div class="terminal-body">
-            <div>
-              <span class="prompt">const</span>
-              <span class="cmd">rostin</span> = {
+          <div class="hero__social">
+            <a data-nolink data-hover>
+              <svg viewBox="0 0 24 24" fill="currentColor" role="img" aria-label="GitHub"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.56v-2.17c-3.2.7-3.87-1.37-3.87-1.37-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.24 2.76.12 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.38-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
+            </a>
+            <a href="https://www.linkedin.com/in/rostin-maafi/" target="_blank" rel="noopener" aria-label="LinkedIn" data-hover>
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.36V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/></svg>
+            </a>
+            <a href="mailto:rostin@maafi.ca" aria-label="Email" data-hover>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+            </a>
+            <span class="hero__social-line"></span>
+            <span class="hero__location">Toronto, Canada</span>
+          </div>
+        </div>
+
+        <div class="hero__aside">
+          <div class="codecard" id="codecard">
+            <div class="codecard__bar">
+              <i></i><i></i><i></i>
+              <span>rostin.ts</span>
+              <span class="codecard__status"><b></b>open to work</span>
             </div>
-            <div>
-              &nbsp;&nbsp;role: <span class="string">"CS Graduate"</span>,
+            <pre class="codecard__code"><code><span class="cl" style="--i:0"><span class="k">const</span> <span class="v">rostin</span> <span class="o">=</span> <span class="p">{</span></span>
+<span class="cl" style="--i:1">  school: <span class="s">"Queen's University"</span>,</span>
+<span class="cl" style="--i:2">  degree: <span class="s">"B.Comp (Hons) · 2026"</span>,</span>
+<span class="cl" style="--i:3">  base: <span class="s">"Toronto, CA"</span>,</span>
+<span class="cl" style="--i:4">  stack: [<span class="s">"Python"</span>, <span class="s">"TypeScript"</span>,</span>
+<span class="cl" style="--i:5">          <span class="s">"C++"</span>, <span class="s">"ROS 2"</span>],</span>
+<span class="cl" style="--i:6">  builds: [<span class="s">"robots"</span>, <span class="s">"products"</span>, <span class="s">"games"</span>],</span>
+<span class="cl" style="--i:7">  status: <span class="s">"open to work"</span>,</span>
+<span class="cl" style="--i:8"><span class="p">}</span><span class="o">;</span></span>
+<span class="cl" style="--i:9"></span>
+<span class="cl" style="--i:10"><span class="k">export default</span> <span class="v">rostin</span>;</span></code></pre>
+          </div>
+        </div>
+      </div>
+
+      <a class="hero__scroll" href="#about" aria-label="Scroll to about">
+        <span>scroll</span><i></i>
+      </a>
+    </section>
+
+    <!-- ===== MARQUEE ===== -->
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee__track">
+        <span>Python</span><span>TypeScript</span><span>Java</span><span>C++</span><span>JavaScript</span><span>React</span><span>Next.js</span><span>ROS 2</span><span>NVIDIA Omniverse</span><span>Tailwind</span><span>Node.js</span><span>REST APIs</span><span>Git</span><span>SQL</span>
+        <span>Python</span><span>TypeScript</span><span>Java</span><span>C++</span><span>JavaScript</span><span>React</span><span>Next.js</span><span>ROS 2</span><span>NVIDIA Omniverse</span><span>Tailwind</span><span>Node.js</span><span>REST APIs</span><span>Git</span><span>SQL</span>
+      </div>
+    </div>
+
+    <!-- ===== ABOUT ===== -->
+    <section class="section about" id="about">
+      <div class="container">
+        <p class="eyebrow" data-reveal>01 — About</p>
+        <h2 class="section__title" data-reveal style="--d:80">Engineer by training,<br>builder by habit.</h2>
+
+        <div class="about__grid">
+          <div class="about__text">
+            <p data-reveal>I'm a <strong>Computer Science graduate from Queen's University</strong>, based in the Greater Toronto Area. I like working across the whole stack — from ROS 2 nodes running on a quadruped robot, to Next.js dashboards, to the Python scripts that quietly save a team hours every week.</p>
+            <p data-reveal style="--d:100">At Gold Line I partnered with a senior developer to ship a <strong>full-featured backgammon game</strong> to production, then engineered an <strong>autonomous security robot</strong>: a Unitree quadruped that patrols the building on its own, simulated in NVIDIA Omniverse before it ever touched real concrete.</p>
+            <p data-reveal style="--d:200">Outside of work I was an active member of <strong>QMIND</strong> (Queen's AI &amp; ML club) and <strong>QGDC</strong> (Queen's Game Dev club), and I run a small studio building custom-coded websites and AI automations for local businesses.</p>
+          </div>
+
+          <div class="about__side">
+            <div class="stats">
+              <div class="stat" data-reveal>
+                <div class="stat__num"><span data-count="5">0</span></div>
+                <div class="stat__label">Roles across software, IT &amp; QA</div>
+              </div>
+              <div class="stat" data-reveal style="--d:80">
+                <div class="stat__num"><span data-count="200" data-suffix="+">0</span></div>
+                <div class="stat__label">Machines imaged &amp; onboarded</div>
+              </div>
+              <div class="stat" data-reveal style="--d:160">
+                <div class="stat__num"><span data-count="1">0</span></div>
+                <div class="stat__label">Robot dog taught to patrol</div>
+              </div>
+              <div class="stat" data-reveal style="--d:240">
+                <div class="stat__num"><span data-count="6">0</span></div>
+                <div class="stat__label">Automations shipped in Maafi Studio</div>
+              </div>
             </div>
-            <div>
-              &nbsp;&nbsp;school:
-              <span class="string">"Queen's University"</span>,
-            </div>
-            <div>
-              &nbsp;&nbsp;focus: [<span class="string">"AI/ML"</span>,
-              <span class="string">"Full-Stack"</span>],
-            </div>
-            <div>
-              &nbsp;&nbsp;languages: [<span class="string">"Python"</span>,
-              <span class="string">"Java"</span>,
-              <span class="string">"C++"</span>,
-              <span class="string">"JS"</span>],
-            </div>
-            <div>
-              &nbsp;&nbsp;seeking: <span class="string">"employment"</span>,
-            </div>
-            <div>&nbsp;&nbsp;available: <span class="keyword">true</span></div>
-            <div>};</div>
-            <br />
-            <div>
-              <span class="prompt">$</span> <span class="cmd">echo</span>
-              <span class="output">"Let's build something great."</span>
+
+            <div class="edu" data-reveal style="--d:200">
+              <div class="edu__stripe" aria-hidden="true"><i></i><i></i><i></i></div>
+              <div class="edu__head">
+                <div>
+                  <div class="edu__school">Queen's University</div>
+                  <div class="edu__degree">Bachelor of Computing (Honours) · Computer Science</div>
+                </div>
+                <div class="edu__years">2020 — 2025</div>
+              </div>
+              <div class="edu__label">Coursework</div>
+              <div class="tags">
+                <span class="tag">Algorithms</span><span class="tag">Data Structures</span><span class="tag">Artificial Intelligence</span><span class="tag">Operating Systems</span><span class="tag">System-Level Programming</span><span class="tag">Software Architecture</span><span class="tag">Neural &amp; Genetic Computing</span><span class="tag">Discrete Math</span>
+              </div>
+              <div class="edu__label">Clubs</div>
+              <div class="tags">
+                <span class="tag tag--accent">QMIND · AI &amp; ML</span><span class="tag tag--accent">QGDC · Game Dev</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Skills -->
-    <section id="skills">
-      <div class="section-header sr">
-        <span class="section-num">02 // STACK</span>
-        <div class="section-line"></div>
+    <!-- ===== EXPERIENCE ===== -->
+    <section class="section experience" id="experience">
+      <div class="container">
+        <div class="section__head">
+          <div>
+            <p class="eyebrow" data-reveal>02 — Experience</p>
+            <h2 class="section__title" data-reveal style="--d:80">Where I've worked.</h2>
+          </div>
+        </div>
+
+        <div class="timeline" id="timeline">
+          <div class="timeline__progress" id="timelineProgress" aria-hidden="true"></div>
+
+          <article class="job" data-reveal>
+            <div class="job__date">May 2025 — May 2026</div>
+            <div class="job__marker"><span class="job__dot"></span></div>
+            <div class="job__body">
+              <h3 class="job__role">Software Engineer <span class="job__at">@</span> <span class="job__company">Group of Gold Line</span></h3>
+              <div class="job__meta">Markham, ON · Full-time</div>
+              <ul class="job__list">
+                <li>Partnered with a senior developer to design and build a full-featured backgammon game, deployed to the company website to boost engagement and time on site.</li>
+                <li>Engineered an autonomous security robot on a Unitree quadruped to automate basement patrols and replace a manual security-guard role.</li>
+                <li>Built and simulated the robot's navigation and patrol stack with ROS 2 Humble, validating perception and motion in NVIDIA Omniverse before real-world deployment.</li>
+              </ul>
+              <div class="tags"><span class="tag">ROS 2 Humble</span><span class="tag">NVIDIA Omniverse</span><span class="tag">Python</span><span class="tag">C++</span><span class="tag">JavaScript</span></div>
+            </div>
+          </article>
+
+          <article class="job" data-reveal>
+            <div class="job__date">Apr 2024 — Sep 2024</div>
+            <div class="job__marker"><span class="job__dot"></span></div>
+            <div class="job__body">
+              <h3 class="job__role">Software Developer <span class="job__at">@</span> <span class="job__company">CCC Pack</span></h3>
+              <div class="job__meta">Internship · 6 months</div>
+              <ul class="job__list">
+                <li>Six-month software development internship building and maintaining internal tooling.</li>
+              </ul>
+              <div class="tags"><span class="tag">Software Development</span><span class="tag">Internship</span></div>
+            </div>
+          </article>
+
+          <article class="job" data-reveal>
+            <div class="job__date">Jul 2023 — Sep 2023</div>
+            <div class="job__marker"><span class="job__dot"></span></div>
+            <div class="job__body">
+              <h3 class="job__role">Software Technician <span class="job__at">@</span> <span class="job__company">GUS Canada Colleges</span></h3>
+              <div class="job__meta">Fleming College Toronto · Toronto, ON · Internship</div>
+              <ul class="job__list">
+                <li>Ran the imaging pipeline — standardized OS, software and security configs — across 200+ machines, then onboarded them to the network and Active Directory.</li>
+                <li>Automated repetitive workflows with Python and integrated systems over REST APIs, including an email-to-ticket flow into ServiceNow.</li>
+                <li>Led the computing rollout for a brand-new floor: labs, classrooms and offices, end to end.</li>
+                <li>Built Excel reports and dashboards for operational analysis.</li>
+              </ul>
+              <div class="tags"><span class="tag">Python</span><span class="tag">REST APIs</span><span class="tag">ServiceNow</span><span class="tag">Active Directory</span></div>
+            </div>
+          </article>
+
+          <article class="job" data-reveal>
+            <div class="job__date">May 2022 — Jul 2022</div>
+            <div class="job__marker"><span class="job__dot"></span></div>
+            <div class="job__body">
+              <h3 class="job__role">Database QA Intern <span class="job__at">@</span> <span class="job__company">Tirgan</span></h3>
+              <div class="job__meta">Toronto, ON · Internship</div>
+              <ul class="job__list">
+                <li>Maintained a comprehensive test-user database spanning diverse profiles, permission levels and configurations.</li>
+                <li>Developed an extensive suite of real-world test cases that sped up identification and resolution of system vulnerabilities.</li>
+                <li>Worked with dev and QA teams to protect data integrity and keep the UX consistent across permission levels.</li>
+              </ul>
+              <div class="tags"><span class="tag">QA</span><span class="tag">Test Design</span><span class="tag">Databases</span></div>
+            </div>
+          </article>
+
+          <article class="job" data-reveal>
+            <div class="job__date">Jun 2021 — Aug 2021</div>
+            <div class="job__marker"><span class="job__dot"></span></div>
+            <div class="job__body">
+              <h3 class="job__role">Constituency Assistant <span class="job__at">@</span> <span class="job__company">House of Commons of Canada</span></h3>
+              <div class="job__meta">Office of MP Ali Ehsassi · Toronto, ON · Contract</div>
+              <ul class="job__list">
+                <li>Automated data entry and report generation with Python, cutting manual effort and errors.</li>
+                <li>Redesigned the MP's website in HTML/CSS, improving usability and accessibility across devices.</li>
+                <li>Provided hands-on IT support across hardware, software and systems.</li>
+              </ul>
+              <div class="tags"><span class="tag">Python</span><span class="tag">HTML/CSS</span><span class="tag">Accessibility</span></div>
+            </div>
+          </article>
+        </div>
       </div>
-      <div class="skills-grid">
-        <div class="skill-card sr sr-d1">
-          <span class="skill-icon">🐍</span>
-          <div class="skill-name">Python</div>
-          <div class="skill-meta">Language</div>
-          <div class="skill-bar">
-            <div class="skill-bar-fill" style="--level: 90%"></div>
+    </section>
+
+    <!-- ===== PROJECTS ===== -->
+    <section class="section projects" id="projects">
+      <div class="container">
+        <div class="section__head">
+          <div>
+            <p class="eyebrow" data-reveal>03 — Projects</p>
+            <h2 class="section__title" data-reveal style="--d:80">Things I've built.</h2>
           </div>
+          <a class="link-arrow" data-nolink data-reveal style="--d:160">
+            All repos on GitHub
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg>
+          </a>
         </div>
-        <div class="skill-card sr sr-d2">
-          <span class="skill-icon">☕</span>
-          <div class="skill-name">Java</div>
-          <div class="skill-meta">Language</div>
-          <div class="skill-bar">
-            <div class="skill-bar-fill" style="--level: 85%"></div>
+
+        <div class="bento">
+
+          <!-- Maafi Studio -->
+          <article class="card card--wide" data-reveal data-tilt>
+            <div class="card__visual card__visual--img">
+              <img src="assets/studio.png" alt="Maafi Studio landing page — AI front desk for local business" loading="lazy" width="1440" height="900">
+              <span class="card__pill">Featured</span>
+            </div>
+            <div class="card__body">
+              <h3 class="card__title">Maafi Studio</h3>
+              <p class="card__desc">An AI front desk for appointment- and quote-driven local businesses. Captures every lead, books the appointment, runs follow-ups, sends quotes, asks for reviews and keeps the CRM clean — driven by a real automation engine behind clean adapter interfaces, with a live product dashboard for a seeded tenant.</p>
+              <div class="tags"><span class="tag">Next.js 15</span><span class="tag">React 19</span><span class="tag">TypeScript</span><span class="tag">Tailwind 4</span><span class="tag">Zod</span></div>
+              <div class="card__links">
+                <a href="https://maafi.ca/studio/" target="_blank" rel="noopener">Live demo <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+                <a data-nolink>Source <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+              </div>
+            </div>
+          </article>
+
+          <!-- Robot -->
+          <article class="card" data-reveal style="--d:100" data-tilt>
+            <div class="card__visual">
+              <div class="viz viz--robot" aria-hidden="true">
+                <div class="robot__grid"></div>
+                <div class="robot__sweep"></div>
+                <svg class="robot__svg" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice">
+                  <path id="patrol" d="M36 36 H284 V164 H36 Z" fill="none" stroke="rgba(255,194,71,.4)" stroke-dasharray="4 7"/>
+                  <rect x="130" y="82" width="60" height="36" fill="none" stroke="rgba(255,255,255,.14)"/>
+                  <rect x="60" y="120" width="40" height="24" fill="none" stroke="rgba(255,255,255,.1)"/>
+                  <rect x="220" y="60" width="34" height="34" fill="none" stroke="rgba(255,255,255,.1)"/>
+                  <circle r="14" fill="none" stroke="rgba(255,194,71,.6)" stroke-width="1.5">
+                    <animateMotion dur="9s" repeatCount="indefinite"><mpath href="#patrol"/></animateMotion>
+                    <animate attributeName="r" values="6;18;6" dur="2.2s" repeatCount="indefinite"/>
+                    <animate attributeName="opacity" values=".9;0;.9" dur="2.2s" repeatCount="indefinite"/>
+                  </circle>
+                  <circle r="5" fill="#ffc247">
+                    <animateMotion dur="9s" repeatCount="indefinite"><mpath href="#patrol"/></animateMotion>
+                  </circle>
+                </svg>
+                <div class="robot__hud"><span>PATROL · ROS 2 HUMBLE</span><span class="blink">● LIVE</span></div>
+              </div>
+            </div>
+            <div class="card__body">
+              <h3 class="card__title">Autonomous Security Robot</h3>
+              <p class="card__desc">A Unitree quadruped that patrols a basement on its own, replacing a manual guard shift. Navigation and patrol stack on ROS 2 Humble, with perception and motion validated in NVIDIA Omniverse before deployment.</p>
+              <div class="tags"><span class="tag">ROS 2 Humble</span><span class="tag">Omniverse</span><span class="tag">Unitree</span><span class="tag">Python</span></div>
+              <div class="card__links"><span class="card__note">Built at Gold Line</span></div>
+            </div>
+          </article>
+
+          <!-- Backgammon -->
+          <article class="card" data-reveal data-tilt>
+            <div class="card__visual">
+              <div class="viz viz--bg" aria-hidden="true">
+                <div class="board">
+                  <div class="points points--top"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                  <div class="points points--bot"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                  <div class="bar"></div>
+                  <span class="checker c-light" style="--x:6%;--y:4%"></span>
+                  <span class="checker c-light" style="--x:6%;--y:16%"></span>
+                  <span class="checker c-light" style="--x:6%;--y:28%"></span>
+                  <span class="checker c-dark" style="--x:31%;--y:4%"></span>
+                  <span class="checker c-dark" style="--x:31%;--y:16%"></span>
+                  <span class="checker c-light" style="--x:68.5%;--y:4%"></span>
+                  <span class="checker c-dark" style="--x:81%;--y:4%"></span>
+                  <span class="checker c-dark" style="--x:81%;--y:16%"></span>
+                  <span class="checker c-dark" style="--x:6%;--y:84%"></span>
+                  <span class="checker c-dark" style="--x:6%;--y:72%"></span>
+                  <span class="checker c-light" style="--x:43.5%;--y:84%"></span>
+                  <span class="checker c-light" style="--x:43.5%;--y:72%"></span>
+                  <span class="checker c-light" style="--x:93.5%;--y:84%"></span>
+                  <span class="checker c-dark mover" style="--x:56%;--y:84%"></span>
+                  <div class="dice"><i>⚄</i><i>⚂</i></div>
+                </div>
+              </div>
+            </div>
+            <div class="card__body">
+              <h3 class="card__title">Backgammon</h3>
+              <p class="card__desc">A full-featured backgammon game designed and built with a senior developer and deployed to Gold Line's website to boost user engagement and time on site.</p>
+              <div class="tags"><span class="tag">JavaScript</span><span class="tag">Game Logic</span><span class="tag">Web</span></div>
+              <div class="card__links"><span class="card__note">Shipped to production</span></div>
+            </div>
+          </article>
+
+          <!-- Automation -->
+          <article class="card" data-reveal style="--d:100" data-tilt>
+            <div class="card__visual">
+              <div class="viz viz--term" aria-hidden="true">
+                <div class="term">
+                  <div class="term__bar"><i></i><i></i><i></i><span>ops — zsh</span></div>
+                  <div class="term__body">
+                    <p style="--i:0"><span class="t-p">$</span> python image_fleet.py --floor 4 --count 200</p>
+                    <p style="--i:1"><span class="t-ok">✓</span> 200 devices imaged · enrolled in AD</p>
+                    <p style="--i:2"><span class="t-p">$</span> python mail2ticket.py --watch inbox</p>
+                    <p style="--i:3"><span class="t-info">→</span> POST /api/now/table/incident · 201</p>
+                    <p style="--i:4"><span class="t-ok">✓</span> 14 tickets routed to ServiceNow</p>
+                    <p style="--i:5"><span class="t-p">$</span> <span class="t-caret"></span></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card__body">
+              <h3 class="card__title">IT Automation Toolkit</h3>
+              <p class="card__desc">Python scripts and REST API integrations that automated fleet imaging for 200+ machines and turned inbound emails into ServiceNow tickets, plus Excel dashboards for reporting.</p>
+              <div class="tags"><span class="tag">Python</span><span class="tag">REST APIs</span><span class="tag">ServiceNow</span></div>
+              <div class="card__links"><span class="card__note">Built at Fleming College Toronto</span></div>
+            </div>
+          </article>
+
+          <!-- MP website -->
+          <article class="card" data-reveal style="--d:200" data-tilt>
+            <div class="card__visual">
+              <div class="viz viz--web" aria-hidden="true">
+                <div class="browser">
+                  <div class="browser__bar"><i></i><i></i><i></i><span>ehsassi.ca</span></div>
+                  <div class="browser__page gov">
+                    <div class="gov__band"><b></b><s></s><s></s><s></s></div>
+                    <div class="sk sk--title"></div>
+                    <div class="sk"></div><div class="sk sk--short"></div>
+                    <div class="gov__cols"><div></div><div></div><div></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card__body">
+              <h3 class="card__title">MP Website Redesign</h3>
+              <p class="card__desc">Rebuilt the constituency website for MP Ali Ehsassi in HTML/CSS with a focus on usability and accessibility across devices, alongside Python automation for data entry and reporting.</p>
+              <div class="tags"><span class="tag">HTML</span><span class="tag">CSS</span><span class="tag">Accessibility</span><span class="tag">Python</span></div>
+              <div class="card__links"><span class="card__note">House of Commons of Canada</span></div>
+            </div>
+          </article>
+
+          <!-- Web studio -->
+          <article class="card" data-reveal data-tilt>
+            <div class="card__visual">
+              <div class="viz viz--web" aria-hidden="true">
+                <div class="browser">
+                  <div class="browser__bar"><i></i><i></i><i></i><span>maafi.ca</span></div>
+                  <div class="browser__page studio">
+                    <div class="studio__blob"></div>
+                    <div class="studio__pill"></div>
+                    <div class="sk sk--title sk--center"></div>
+                    <div class="sk sk--center sk--short"></div>
+                    <div class="studio__btns"><b></b><s></s></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card__body">
+              <h3 class="card__title">Web Studio</h3>
+              <p class="card__desc">Landing page for my freelance web studio — custom-coded and animation-heavy, with services, process, pricing and lead intake for small businesses and startups.</p>
+              <div class="tags"><span class="tag">HTML</span><span class="tag">CSS</span><span class="tag">JavaScript</span></div>
+              <div class="card__links">
+                <a data-nolink>Source <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+              </div>
+            </div>
+          </article>
+
+          <!-- GitHub CTA -->
+          <div class="card card--wide card--cta" data-nolink data-reveal style="--d:100">
+            <div class="cta__bg" aria-hidden="true"></div>
+            <div class="cta__inner">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="cta__icon"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.56v-2.17c-3.2.7-3.87-1.37-3.87-1.37-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.24 2.76.12 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.38-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
+              <div>
+                <h3 class="card__title">More on GitHub</h3>
+                <p class="card__desc">Experiments, side projects and the source for everything above.</p>
+              </div>
+              <span class="cta__arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></span>
+            </div>
           </div>
+
         </div>
-        <div class="skill-card sr sr-d3">
-          <span class="skill-icon">⚡</span>
-          <div class="skill-name">C++</div>
-          <div class="skill-meta">Language</div>
-          <div class="skill-bar">
-            <div class="skill-bar-fill" style="--level: 80%"></div>
+      </div>
+    </section>
+
+    <!-- ===== SKILLS ===== -->
+    <section class="section skills" id="skills">
+      <div class="container">
+        <p class="eyebrow" data-reveal>04 — Skills</p>
+        <h2 class="section__title" data-reveal style="--d:80">The toolbox.</h2>
+
+        <div class="skills__grid">
+          <div class="skillgroup" data-reveal>
+            <h3><span>01</span>Languages</h3>
+            <div class="chips">
+              <span class="chip">Python</span><span class="chip">TypeScript</span><span class="chip">JavaScript</span><span class="chip">Java</span><span class="chip">C++</span><span class="chip">SQL</span><span class="chip">HTML / CSS</span>
+            </div>
           </div>
-        </div>
-        <div class="skill-card sr sr-d4">
-          <span class="skill-icon">✦</span>
-          <div class="skill-name">JavaScript</div>
-          <div class="skill-meta">Language</div>
-          <div class="skill-bar">
-            <div class="skill-bar-fill" style="--level: 88%"></div>
+          <div class="skillgroup" data-reveal style="--d:80">
+            <h3><span>02</span>Frameworks &amp; Tools</h3>
+            <div class="chips">
+              <span class="chip">React</span><span class="chip">Next.js</span><span class="chip">Node.js</span><span class="chip">Tailwind CSS</span><span class="chip">Git &amp; GitHub</span><span class="chip">REST APIs</span><span class="chip">ServiceNow</span><span class="chip">Active Directory</span>
+            </div>
           </div>
-        </div>
-        <div class="skill-card sr sr-d5">
-          <span class="skill-icon">⚛</span>
-          <div class="skill-name">React</div>
-          <div class="skill-meta">Framework</div>
-          <div class="skill-bar">
-            <div class="skill-bar-fill" style="--level: 85%"></div>
+          <div class="skillgroup" data-reveal style="--d:160">
+            <h3><span>03</span>AI &amp; Robotics</h3>
+            <div class="chips">
+              <span class="chip">ROS 2 Humble</span><span class="chip">NVIDIA Omniverse</span><span class="chip">Unitree Quadruped</span><span class="chip">Simulation</span><span class="chip">Neural &amp; Genetic Computing</span><span class="chip">LLM Automation</span>
+            </div>
           </div>
-        </div>
-        <div class="skill-card sr sr-d6">
-          <span class="skill-icon">🟢</span>
-          <div class="skill-name">Node.js</div>
-          <div class="skill-meta">Runtime</div>
-          <div class="skill-bar">
-            <div class="skill-bar-fill" style="--level: 82%"></div>
-          </div>
-        </div>
-        <div class="skill-card sr sr-d7">
-          <span class="skill-icon">🗄</span>
-          <div class="skill-name">SQL</div>
-          <div class="skill-meta">Database</div>
-          <div class="skill-bar">
-            <div class="skill-bar-fill" style="--level: 78%"></div>
-          </div>
-        </div>
-        <div class="skill-card sr sr-d8">
-          <span class="skill-icon">⎇</span>
-          <div class="skill-name">Git</div>
-          <div class="skill-meta">Version Control</div>
-          <div class="skill-bar">
-            <div class="skill-bar-fill" style="--level: 92%"></div>
+          <div class="skillgroup" data-reveal style="--d:240">
+            <h3><span>04</span>Foundations</h3>
+            <div class="chips">
+              <span class="chip">Data Structures &amp; Algorithms</span><span class="chip">OOP</span><span class="chip">Operating Systems</span><span class="chip">Systems Programming</span><span class="chip">Software Architecture</span><span class="chip">QA &amp; Testing</span>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Projects -->
-    <section id="projects">
-      <div class="section-header sr">
-        <span class="section-num">03 // WORK</span>
-        <div class="section-line"></div>
-      </div>
-      <div class="projects-stack">
-        <a href="#" class="project-item sr sr-d1">
-          <div class="project-icon-box">🤖</div>
-          <div class="project-info">
-            <div class="project-name">AI Chatbot</div>
-            <div class="project-desc">
-              Intelligent conversational agent using NLP and ML pipelines for
-              context-aware, real-time dialogue.
-            </div>
-            <div class="project-tags">
-              <span class="tag">Python</span>
-              <span class="tag">TensorFlow</span>
-              <span class="tag">NLP</span>
-            </div>
-          </div>
-          <span class="project-arrow">→</span>
-        </a>
-        <a href="#" class="project-item sr sr-d2">
-          <div class="project-icon-box">🛒</div>
-          <div class="project-info">
-            <div class="project-name">E-commerce Platform</div>
-            <div class="project-desc">
-              Full-stack app with auth, Stripe payments, real-time inventory,
-              and an optimized shopping experience.
-            </div>
-            <div class="project-tags">
-              <span class="tag">React</span>
-              <span class="tag">Node.js</span>
-              <span class="tag">PostgreSQL</span>
-            </div>
-          </div>
-          <span class="project-arrow">→</span>
-        </a>
-        <a href="#" class="project-item sr sr-d3">
-          <div class="project-icon-box">💪</div>
-          <div class="project-info">
-            <div class="project-name">Mobile Fitness Tracker</div>
-            <div class="project-desc">
-              iOS app with HealthKit integration, workout analytics, and
-              personalized fitness insights via data viz.
-            </div>
-            <div class="project-tags">
-              <span class="tag">Swift</span>
-              <span class="tag">iOS</span>
-              <span class="tag">HealthKit</span>
-            </div>
-          </div>
-          <span class="project-arrow">→</span>
-        </a>
+    <!-- ===== CONTACT ===== -->
+    <section class="section contact" id="contact">
+      <div class="container">
+        <p class="eyebrow eyebrow--center" data-reveal>05 — Contact</p>
+        <h2 class="section__title contact__title" data-reveal style="--d:80">Let's build<br>something <em>great.</em></h2>
+        <p class="contact__desc" data-reveal style="--d:160">I'm open to software engineering roles and interesting projects. Whether it's a role, a collaboration or just a hello — my inbox is always open.</p>
+        <div class="contact__actions" data-reveal style="--d:240">
+          <button class="contact__email" id="copyEmail" type="button" data-magnetic>
+            <span>rostin@maafi.ca</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+          </button>
+          <a class="btn btn--primary" href="mailto:rostin@maafi.ca" data-magnetic>Say hello</a>
+        </div>
+        <div class="contact__links" data-reveal style="--d:320">
+          <a data-nolink>GitHub</a>
+          <a href="https://www.linkedin.com/in/rostin-maafi/" target="_blank" rel="noopener">LinkedIn</a>
+        </div>
       </div>
     </section>
 
-    <!-- Contact -->
-    <section id="contact" class="contact-section">
-      <div class="sr">
-        <h2 class="contact-big">
-          Let's <span class="accent-text">connect</span>
-        </h2>
-        <p class="contact-sub">
-          Currently seeking employment opportunities. If you're building
-          something interesting, I'd love to hear about it.
-        </p>
-      </div>
-      <div class="contact-grid sr sr-d1">
-        <a href="mailto:rostin@maafi.ca" class="contact-btn"
-          >✉ Email <span class="arrow">→</span></a
-        >
-        <a href="https://github.com/" target="_blank" class="contact-btn"
-          >⌥ GitHub <span class="arrow">→</span></a
-        >
-        <a href="https://www.linkedin.com/in/rostin-maafi/" target="_blank" class="contact-btn"
-          >◉ LinkedIn <span class="arrow">→</span></a
-        >
-      </div>
-    </section>
+  </main>
 
-    <footer>
-      <span
-        >© 2026 Rostin Maafi — Built with obsessive attention to detail</span
-      >
-      <a href="#">↑ back_to_top</a>
-    </footer>
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <span>© <span id="year">2026</span> Rostin Maafi</span>
+      <span class="footer__time">Toronto · <span id="localTime">--:--</span></span>
+      <button class="footer__top" id="toTop" type="button" aria-label="Back to top">
+        Back to top
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+      </button>
+    </div>
+  </footer>
 
-    <script>
-      // ═══════════════════════════════════════
-      //  PARTICLE CONSTELLATION NETWORK
-      // ═══════════════════════════════════════
-      (() => {
-        const canvas = document.getElementById("particle-canvas");
-        const ctx = canvas.getContext("2d");
-        let w,
-          h,
-          particles = [],
-          mouse = { x: -999, y: -999 };
-        const PARTICLE_COUNT = 120;
-        const CONNECT_DIST = 150;
-        const MOUSE_DIST = 200;
+  <div class="toast" id="toast" role="status" aria-live="polite">Email copied to clipboard</div>
 
-        function resize() {
-          w = canvas.width = window.innerWidth;
-          h = canvas.height = window.innerHeight;
-        }
-        resize();
-        window.addEventListener("resize", resize);
-
-        document.addEventListener("mousemove", (e) => {
-          mouse.x = e.clientX;
-          mouse.y = e.clientY;
-        });
-
-        class Particle {
-          constructor() {
-            this.x = Math.random() * w;
-            this.y = Math.random() * h;
-            this.vx = (Math.random() - 0.5) * 0.4;
-            this.vy = (Math.random() - 0.5) * 0.4;
-            this.r = Math.random() * 1.5 + 0.5;
-          }
-          update() {
-            const dx = this.x - mouse.x;
-            const dy = this.y - mouse.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < MOUSE_DIST) {
-              const force = (MOUSE_DIST - dist) / MOUSE_DIST;
-              this.vx += (dx / dist) * force * 0.3;
-              this.vy += (dy / dist) * force * 0.3;
-            }
-            this.vx *= 0.98;
-            this.vy *= 0.98;
-            this.x += this.vx;
-            this.y += this.vy;
-            if (this.x < 0) this.x = w;
-            if (this.x > w) this.x = 0;
-            if (this.y < 0) this.y = h;
-            if (this.y > h) this.y = 0;
-          }
-          draw() {
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-            ctx.fillStyle = "rgba(0, 255, 200, 0.5)";
-            ctx.fill();
-          }
-        }
-
-        for (let i = 0; i < PARTICLE_COUNT; i++) particles.push(new Particle());
-
-        function animate() {
-          ctx.clearRect(0, 0, w, h);
-          for (let i = 0; i < particles.length; i++) {
-            for (let j = i + 1; j < particles.length; j++) {
-              const dx = particles[i].x - particles[j].x;
-              const dy = particles[i].y - particles[j].y;
-              const dist = Math.sqrt(dx * dx + dy * dy);
-              if (dist < CONNECT_DIST) {
-                const alpha = (1 - dist / CONNECT_DIST) * 0.15;
-                ctx.beginPath();
-                ctx.moveTo(particles[i].x, particles[i].y);
-                ctx.lineTo(particles[j].x, particles[j].y);
-                ctx.strokeStyle = `rgba(0, 255, 200, ${alpha})`;
-                ctx.lineWidth = 0.5;
-                ctx.stroke();
-              }
-            }
-          }
-          for (const p of particles) {
-            const dx = p.x - mouse.x;
-            const dy = p.y - mouse.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < MOUSE_DIST) {
-              const alpha = (1 - dist / MOUSE_DIST) * 0.3;
-              ctx.beginPath();
-              ctx.moveTo(p.x, p.y);
-              ctx.lineTo(mouse.x, mouse.y);
-              ctx.strokeStyle = `rgba(0, 255, 200, ${alpha})`;
-              ctx.lineWidth = 0.8;
-              ctx.stroke();
-            }
-          }
-          particles.forEach((p) => {
-            p.update();
-            p.draw();
-          });
-          requestAnimationFrame(animate);
-        }
-        animate();
-      })();
-
-      // ═══════════════════════════════════════
-      //  TYPING EFFECT
-      // ═══════════════════════════════════════
-      (() => {
-        const phrases = [
-          "artificial intelligence & design",
-          "machine learning & data",
-          "full-stack development",
-          "clean code & elegant systems",
-        ];
-        const target = document.getElementById("typed-target");
-        let phraseIndex = 0,
-          charIndex = 0,
-          deleting = false;
-
-        function type() {
-          const current = phrases[phraseIndex];
-          if (!deleting) {
-            target.textContent = current.substring(0, charIndex + 1);
-            charIndex++;
-            if (charIndex === current.length) {
-              setTimeout(() => {
-                deleting = true;
-                type();
-              }, 2000);
-              return;
-            }
-          } else {
-            target.textContent = current.substring(0, charIndex - 1);
-            charIndex--;
-            if (charIndex === 0) {
-              deleting = false;
-              phraseIndex = (phraseIndex + 1) % phrases.length;
-            }
-          }
-          setTimeout(type, deleting ? 40 : 70);
-        }
-        setTimeout(type, 1500);
-      })();
-
-      // ═══════════════════════════════════════
-      //  CUSTOM CURSOR
-      // ═══════════════════════════════════════
-      (() => {
-        const dot = document.getElementById("cursor-dot");
-        const ring = document.getElementById("cursor-ring");
-        let mx = -100,
-          my = -100,
-          rx = -100,
-          ry = -100;
-
-        document.addEventListener("mousemove", (e) => {
-          mx = e.clientX;
-          my = e.clientY;
-        });
-
-        function moveCursor() {
-          dot.style.left = mx + "px";
-          dot.style.top = my + "px";
-          rx += (mx - rx) * 0.15;
-          ry += (my - ry) * 0.15;
-          ring.style.left = rx + "px";
-          ring.style.top = ry + "px";
-          requestAnimationFrame(moveCursor);
-        }
-        moveCursor();
-      })();
-
-      // ═══════════════════════════════════════
-      //  SCROLL REVEAL + SKILL BARS
-      // ═══════════════════════════════════════
-      (() => {
-        const observer = new IntersectionObserver(
-          (entries) => {
-            entries.forEach((entry) => {
-              if (entry.isIntersecting) entry.target.classList.add("visible");
-            });
-          },
-          { threshold: 0.1, rootMargin: "0px 0px -40px 0px" }
-        );
-
-        document
-          .querySelectorAll(".sr, .skill-card")
-          .forEach((el) => observer.observe(el));
-      })();
-
-      // ═══════════════════════════════════════
-      //  NAV HIDE ON SCROLL
-      // ═══════════════════════════════════════
-      (() => {
-        let lastY = 0;
-        const nav = document.querySelector("nav");
-        window.addEventListener("scroll", () => {
-          const y = window.scrollY;
-          nav.classList.toggle("hidden", y > lastY && y > 200);
-          lastY = y;
-        });
-      })();
-
-      // ═══════════════════════════════════════
-      //  SMOOTH SCROLL + BACK TO TOP
-      // ═══════════════════════════════════════
-      document.querySelectorAll('a[href^="#"]').forEach((a) => {
-        a.addEventListener("click", (e) => {
-          const t = document.querySelector(a.getAttribute("href"));
-          if (t) {
-            e.preventDefault();
-            t.scrollIntoView({ behavior: "smooth" });
-          }
-        });
-      });
-
-      document.querySelector("footer a").addEventListener("click", (e) => {
-        e.preventDefault();
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      });
-    </script>
-  </body>
+  <script src="js/main.js" defer></script>
+</body>
 </html>
